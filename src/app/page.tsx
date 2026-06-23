@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { getOrganization } from "@/lib/assoconnect";
 import { createClient } from "@/lib/supabase/server";
+import VoteQRCode from "@/components/VoteQRCode";
 
 export const dynamic = "force-dynamic";
 
@@ -40,8 +42,11 @@ const PAGES = [
 ];
 
 export default async function Home() {
-  const [db, api] = await Promise.all([testDatabase(), testApi()]);
+  const [db, api, hdrs] = await Promise.all([testDatabase(), testApi(), headers()]);
   const wsName = (await import("@/config/site")).siteConfig.name;
+  const host = hdrs.get("host") ?? "assoconnect-ws2.vercel.app";
+  const proto = host.startsWith("localhost") ? "http" : "https";
+  const voteUrl = `${proto}://${host}/vote`;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-10 p-8">
@@ -53,6 +58,8 @@ export default async function Home() {
         <Image src="/mascot.png" alt="Mascot" width={160} height={160} priority />
         <h1 className="text-4xl font-bold">Padawan Mathieu is ready</h1>
       </div>
+
+      <VoteQRCode url={voteUrl} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-2xl">
         {PAGES.map((p) => (
