@@ -39,12 +39,8 @@ export function getOrganization(ulid = process.env.ASSOCONNECT_ORGANIZATION_ULID
   return request<Organization>(`/organizations/${ulid}`);
 }
 
-export type Contact = {
+export type Contact = Record<string, unknown> & {
   "@id": string;
-  id: string;
-  firstName: string;
-  lastName: string;
-  picture?: string | null;
 };
 
 export type ContactsResponse = {
