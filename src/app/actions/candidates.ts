@@ -4,8 +4,17 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 function extractId(rawId: string): string {
-  // "/api/v1/crm/contacts/01KVTGGQHJZYMMF1T338S2NFG6" → "01KVTGGQHJZYMMF1T338S2NFG6"
   return rawId.split("/").pop() ?? rawId;
+}
+
+export async function recordVote(contactId: string): Promise<{ error: string | null }> {
+  const db = await createClient();
+  const { error } = await db.rpc("increment_vote", { p_contact_id: contactId });
+  if (error) {
+    console.error("[recordVote] error:", error);
+    return { error: error.message };
+  }
+  return { error: null };
 }
 
 export async function addCandidate(rawId: string): Promise<{ error: string | null }> {
@@ -14,18 +23,15 @@ export async function addCandidate(rawId: string): Promise<{ error: string | nul
 
   const db = await createClient();
 
-  // Insert new candidate
   const { error: insertError } = await db
     .from("votes")
     .insert({ contact_id: contactId, vote_count: 0 });
 
   if (insertError && insertError.code !== "23505") {
-    // 23505 = unique violation (already exists), safe to ignore
     console.error("[addCandidate] insert error:", insertError);
     return { error: insertError.message };
   }
 
-  // Reset all vote counts to 0
   const { error: resetError } = await db
     .from("votes")
     .update({ vote_count: 0 })
@@ -57,11 +63,10 @@ export async function removeCandidate(rawId: string): Promise<{ error: string | 
     return { error: deleteError.message };
   }
 
-  // Reset remaining vote counts to 0
   const { error: resetError } = await db
     .from("votes")
     .update({ vote_count: 0 })
-    .gte("vote_count", 0);
+    .neq("contact_id", "");
 
   if (resetError) {
     console.error("[removeCandidate] reset error:", resetError);

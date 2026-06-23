@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { recordVote } from "@/app/actions/candidates";
 
 type Candidate = {
   id: string;
@@ -145,12 +146,14 @@ export default function BonneteauGame({ candidates }: { candidates: Candidate[] 
 
   function handlePickSlot(slotIndex: number) {
     if (step !== "pick") return;
-    // Find which candidate is in this slot after shuffle
     const candidateIndex = positions[slotIndex];
     const revealedCandidate = candidates[candidateIndex];
     setLiftedSlot(slotIndex);
     setRevealed(revealedCandidate);
     setStep("reveal");
+    recordVote(revealedCandidate.id).then((res) => {
+      if (res.error) console.error("[handlePickSlot] recordVote error:", res.error);
+    });
     setTimeout(() => setStep("confirm"), 1600);
   }
 
