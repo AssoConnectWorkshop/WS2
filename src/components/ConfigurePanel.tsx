@@ -40,24 +40,39 @@ export default function ConfigurePanel({
   const selectedIds = new Set(selected.map((c) => c.id));
   const available = contacts.filter((c) => !selectedIds.has(c.id));
 
+  const [actionError, setActionError] = useState<string | null>(null);
+
   function handleAdd(contact: Contact) {
+    console.log("[ConfigurePanel] handleAdd clicked", contact.id);
+    setActionError(null);
     setLoadingId(contact.id);
     startTransition(async () => {
-      await addCandidate(contact.id);
+      const result = await addCandidate(contact.id);
+      console.log("[ConfigurePanel] addCandidate result", result);
+      if (result.error) setActionError(`addCandidate: ${result.error}`);
       setLoadingId(null);
     });
   }
 
   function handleRemove(contact: Contact) {
+    console.log("[ConfigurePanel] handleRemove clicked", contact.id);
+    setActionError(null);
     setLoadingId(contact.id);
     startTransition(async () => {
-      await removeCandidate(contact.id);
+      const result = await removeCandidate(contact.id);
+      console.log("[ConfigurePanel] removeCandidate result", result);
+      if (result.error) setActionError(`removeCandidate: ${result.error}`);
       setLoadingId(null);
     });
   }
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-2xl">
+      {actionError && (
+        <div className="bg-red-50 border border-red-300 rounded-xl p-4 text-sm text-red-700 font-mono break-all">
+          ❌ {actionError}
+        </div>
+      )}
       {/* Selected candidates */}
       <section>
         <h2 className="text-lg font-semibold text-indigo-800 mb-3">
