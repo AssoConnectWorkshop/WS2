@@ -1,38 +1,45 @@
 import { getContacts } from "@/lib/assoconnect";
+import { createClient } from "@/lib/supabase/server";
 import BonneteauGame from "@/components/BonneteauGame";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function VotePage() {
-  let candidates: { id: string; firstName: string; lastName: string; picture?: string | null }[] = [];
-  let error: string | null = null;
+  const [contactsData, db] = await Promise.all([
+    getContacts().catch(() => null),
+    createClient(),
+  ]);
 
-  try {
-    const data = await getContacts();
-    candidates = data["hydra:member"].slice(0, 3).map((c) => ({
-      id: c.id ?? c["@id"],
-      firstName: c.firstname ?? "",
-      lastName: c.lastname ?? "",
-      picture: c.profilPictureUrl ?? null,
+  const { data: rows } = await db.from("votes").select("contact_id");
+  const selectedIds = (rows ?? []).map((r) => r.contact_id);
+
+  const allContacts = contactsData?.["hydra:member"] ?? [];
+  const candidates = selectedIds
+    .map((id) => allContacts.find((c) => (c.id ?? c["@id"]) === id))
+    .filter(Boolean)
+    .map((c) => ({
+      id: (c!.id ?? c!["@id"]) as string,
+      firstName: c!.firstname ?? "",
+      lastName: c!.lastname ?? "",
+      picture: c!.profilPictureUrl ?? null,
     }));
-  } catch (e) {
-    error = e instanceof Error ? e.message : String(e);
-  }
 
-  if (error || candidates.length < 3) {
+  if (candidates.length < 3) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-8">
-        <h1 className="text-2xl font-bold text-red-600">Erreur de chargement des candidats</h1>
-        {error && (
-          <pre className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800 max-w-2xl w-full whitespace-pre-wrap break-all">
-            {error}
-          </pre>
-        )}
-        {!error && (
-          <p className="text-gray-600">
-            Seulement {candidates.length} contact(s) retourné(s) &mdash; il en faut au moins 3.
-          </p>
-        )}
+      <main className="min-h-screen flex flex-col items-center justify-center gap-6 p-8 text-center">
+        <h1 className="text-2xl font-bold text-gray-700">Aucun vote en cours</h1>
+        <p className="text-gray-500">
+          Il faut au moins 3 candidats configurés pour démarrer le vote.
+          <br />
+          {candidates.length > 0 && `(${candidates.length}/3 candidat(s) sélectionné(s))`}
+        </p>
+        <Link
+          href="/configure"
+          className="px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 transition-colors"
+        >
+          Configurer les candidats
+        </Link>
       </main>
     );
   }
