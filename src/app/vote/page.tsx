@@ -5,6 +5,10 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
+function extractId(raw: string): string {
+  return raw.split("/").pop() ?? raw;
+}
+
 export default async function VotePage() {
   const [contactsData, db] = await Promise.all([
     getContacts().catch(() => null),
@@ -14,14 +18,20 @@ export default async function VotePage() {
   const { data: rows } = await db.from("votes").select("contact_id");
   const selectedIds = (rows ?? []).map((r) => r.contact_id);
 
-  const allContacts = contactsData?.["hydra:member"] ?? [];
+  const allContacts = (contactsData?.["hydra:member"] ?? []).map((c) => ({
+    id: extractId((c.id ?? c["@id"]) as string),
+    firstname: c.firstname ?? "",
+    lastname: c.lastname ?? "",
+    profilPictureUrl: c.profilPictureUrl ?? null,
+  }));
+
   const candidates = selectedIds
-    .map((id) => allContacts.find((c) => (c.id ?? c["@id"]) === id))
+    .map((id) => allContacts.find((c) => c.id === id))
     .filter(Boolean)
     .map((c) => ({
-      id: (c!.id ?? c!["@id"]) as string,
-      firstName: c!.firstname ?? "",
-      lastName: c!.lastname ?? "",
+      id: c!.id,
+      firstName: c!.firstname,
+      lastName: c!.lastname,
       picture: c!.profilPictureUrl ?? null,
     }));
 
@@ -31,8 +41,9 @@ export default async function VotePage() {
         <h1 className="text-2xl font-bold text-gray-700">Aucun vote en cours</h1>
         <p className="text-gray-500">
           Il faut au moins 3 candidats configurés pour démarrer le vote.
-          <br />
-          {candidates.length > 0 && `(${candidates.length}/3 candidat(s) sélectionné(s))`}
+          {candidates.length > 0 && (
+            <><br />{candidates.length}/3 candidat(s) sélectionné(s)</>
+          )}
         </p>
         <Link
           href="/configure"

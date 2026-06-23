@@ -5,6 +5,7 @@ import { addCandidate, removeCandidate } from "@/app/actions/candidates";
 
 type Contact = {
   id: string;
+  rawId: string;
   firstname: string;
   lastname: string;
   profilPictureUrl?: string | null;
@@ -43,11 +44,11 @@ export default function ConfigurePanel({
   const [actionError, setActionError] = useState<string | null>(null);
 
   function handleAdd(contact: Contact) {
-    console.log("[ConfigurePanel] handleAdd clicked", contact.id);
+    console.log("[ConfigurePanel] handleAdd clicked", contact.rawId);
     setActionError(null);
     setLoadingId(contact.id);
     startTransition(async () => {
-      const result = await addCandidate(contact.id);
+      const result = await addCandidate(contact.rawId);
       console.log("[ConfigurePanel] addCandidate result", result);
       if (result.error) setActionError(`addCandidate: ${result.error}`);
       setLoadingId(null);
@@ -55,11 +56,11 @@ export default function ConfigurePanel({
   }
 
   function handleRemove(contact: Contact) {
-    console.log("[ConfigurePanel] handleRemove clicked", contact.id);
+    console.log("[ConfigurePanel] handleRemove clicked", contact.rawId);
     setActionError(null);
     setLoadingId(contact.id);
     startTransition(async () => {
-      const result = await removeCandidate(contact.id);
+      const result = await removeCandidate(contact.rawId);
       console.log("[ConfigurePanel] removeCandidate result", result);
       if (result.error) setActionError(`removeCandidate: ${result.error}`);
       setLoadingId(null);

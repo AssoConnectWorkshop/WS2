@@ -4,6 +4,10 @@ import ConfigurePanel from "@/components/ConfigurePanel";
 
 export const dynamic = "force-dynamic";
 
+function extractId(raw: string): string {
+  return raw.split("/").pop() ?? raw;
+}
+
 export default async function ConfigurePage() {
   const [contactsData, db] = await Promise.all([
     getContacts().catch(() => null),
@@ -11,7 +15,8 @@ export default async function ConfigurePage() {
   ]);
 
   const allContacts = (contactsData?.["hydra:member"] ?? []).map((c) => ({
-    id: c.id ?? c["@id"],
+    id: extractId((c.id ?? c["@id"]) as string),
+    rawId: (c.id ?? c["@id"]) as string,
     firstname: c.firstname ?? "",
     lastname: c.lastname ?? "",
     profilPictureUrl: c.profilPictureUrl ?? null,
