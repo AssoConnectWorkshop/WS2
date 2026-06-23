@@ -29,7 +29,7 @@ export async function addCandidate(rawId: string): Promise<{ error: string | nul
   const { error: resetError } = await db
     .from("votes")
     .update({ vote_count: 0 })
-    .gte("vote_count", 0);
+    .neq("contact_id", "");
 
   if (resetError) {
     console.error("[addCandidate] reset error:", resetError);
