@@ -56,7 +56,7 @@ export default async function Home() {
 
       <div className="flex flex-col items-center gap-4">
         <Image src="/mascot.png" alt="Mascot" width={160} height={160} priority />
-        <h1 className="text-4xl font-bold">Padawan Mathieu is ready</h1>
+        <h1 className="text-4xl font-bold">Ki voeu devenir président ?</h1>
       </div>
 
       <VoteQRCode url={voteUrl} />
