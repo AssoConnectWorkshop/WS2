@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { recordVote } from "@/app/actions/candidates";
 import BonneteauGame from "./games/BonneteauGame";
 import PlinkoGame from "./games/PlinkoGame";
@@ -36,8 +37,8 @@ function pickRandom() {
   return Math.floor(Math.random() * GAMES.length);
 }
 
-export default function VoteGame({ candidates }: { candidates: Candidate[] }) {
-  const [gameIdx, setGameIdx] = useState(pickRandom);
+export default function VoteGame({ candidates, forcedGame }: { candidates: Candidate[]; forcedGame?: number }) {
+  const [gameIdx] = useState(forcedGame !== undefined ? forcedGame : pickRandom);
   const [voted, setVoted] = useState<Candidate | null>(null);
   const [chosen, setChosen] = useState<Candidate | null>(null);
   const [funnyMsg] = useState(() => FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
@@ -47,12 +48,6 @@ export default function VoteGame({ candidates }: { candidates: Candidate[] }) {
     setVoted(candidate);
     const res = await recordVote(candidate.id);
     if (res.error) console.error("[VoteGame] recordVote error:", res.error);
-  }
-
-  function reset() {
-    setVoted(null);
-    setChosen(null);
-    setGameIdx(pickRandom());
   }
 
   const voteDiffersFromChoice = voted && chosen && voted.id !== chosen.id;
@@ -83,14 +78,12 @@ export default function VoteGame({ candidates }: { candidates: Candidate[] }) {
               {funnyMsg}
             </motion.p>
           )}
-          <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-            onClick={reset}
-            className="mt-2 px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold shadow hover:bg-indigo-700 transition-colors"
+          <Link
+            href="/result"
+            className="mt-2 px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold shadow hover:bg-indigo-700 transition-colors inline-block"
           >
-            Voter à nouveau
-          </motion.button>
+            Voir les résultats →
+          </Link>
         </motion.div>
       </main>
     );

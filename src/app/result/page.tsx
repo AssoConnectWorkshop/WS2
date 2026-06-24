@@ -53,7 +53,7 @@ export default async function ResultPage() {
     <main className="min-h-screen flex flex-col items-center gap-8 p-8 bg-gradient-to-b from-indigo-50 to-purple-50">
       <h1 className="text-3xl font-bold text-indigo-800">Résultats du vote</h1>
       <p className="text-gray-500 text-sm">{totalVotes} vote{totalVotes !== 1 ? "s" : ""} exprimé{totalVotes !== 1 ? "s" : ""}</p>
-      <ResultBars results={results} />
+      <ResultBars results={results} totalVotes={totalVotes} />
       <Link href="/vote" className="mt-4 text-sm text-indigo-500 hover:underline">
         ← Retour au vote
       </Link>

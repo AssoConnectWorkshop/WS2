@@ -40,15 +40,16 @@ const DICTATOR: Result = {
   percent: 100,
 };
 
-export default function ResultBars({ results }: { results: Result[] }) {
+export default function ResultBars({ results, totalVotes }: { results: Result[]; totalVotes: number }) {
   const [animated, setAnimated] = useState(false);
   const [dictatorVisible, setDictatorVisible] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setAnimated(true), 100);
-    const t2 = setTimeout(() => setDictatorVisible(true), 1800);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+    let t2: ReturnType<typeof setTimeout> | undefined;
+    if (totalVotes >= 15) t2 = setTimeout(() => setDictatorVisible(true), 1800);
+    return () => { clearTimeout(t1); if (t2) clearTimeout(t2); };
+  }, [totalVotes]);
 
   const sorted = [...results].sort((a, b) => b.voteCount - a.voteCount);
   const winner = sorted[0];
