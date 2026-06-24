@@ -80,7 +80,7 @@ export default function ResultBars({ results }: { results: Result[] }) {
                   <span className="font-black text-red-100 tracking-wide">
                     Arno D&apos;LA TAIYE
                     <span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">
-                      👑 DICTATEUR
+                      👑 Président suprème
                     </span>
                   </span>
                   <span className="text-sm font-black text-red-300">∞ votes</span>
