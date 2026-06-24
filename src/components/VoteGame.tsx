@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { recordVote } from "@/app/actions/candidates";
@@ -38,7 +38,7 @@ function pickRandom() {
 }
 
 export default function VoteGame({ candidates, forcedGame }: { candidates: Candidate[]; forcedGame?: number }) {
-  const [gameIdx] = useState(forcedGame !== undefined ? forcedGame : pickRandom);
+  const [gameIdx, setGameIdx] = useState<number | null>(forcedGame !== undefined ? forcedGame : null);
   const [voted, setVoted] = useState<Candidate | null>(null);
   const [chosen, setChosen] = useState<Candidate | null>(null);
   const [funnyMsg] = useState(() => FUNNY_MESSAGES[Math.floor(Math.random() * FUNNY_MESSAGES.length)]);
@@ -49,6 +49,10 @@ export default function VoteGame({ candidates, forcedGame }: { candidates: Candi
     const res = await recordVote(candidate.id);
     if (res.error) console.error("[VoteGame] recordVote error:", res.error);
   }
+
+  useEffect(() => {
+    if (gameIdx === null) setGameIdx(pickRandom());
+  }, [gameIdx]);
 
   const voteDiffersFromChoice = voted && chosen && voted.id !== chosen.id;
 
@@ -88,6 +92,8 @@ export default function VoteGame({ candidates, forcedGame }: { candidates: Candi
       </main>
     );
   }
+
+  if (gameIdx === null) return null;
 
   const GameComponent = GAMES[gameIdx];
 
