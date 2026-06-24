@@ -7,9 +7,10 @@ import Avatar from "./Avatar";
 
 const SIZE = 300;
 const CENTER = SIZE / 2;
-const ORBIT_R = [90, 90, 90];
-const SPEEDS = [1.8, -2.4, 2.1];
+const ORBIT_R = [95, 95, 95];
+const SPEEDS = [2.8, -3.5, 3.1];
 const PHASES = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
+const HIT_RADIUS = 28; // px — must be within this distance to count as a hit
 
 function candidatePos(t: number, idx: number) {
   const angle = PHASES[idx] + (t * SPEEDS[idx] * Math.PI) / 180;
@@ -19,11 +20,12 @@ function candidatePos(t: number, idx: number) {
   };
 }
 
-export default function DartsGame({ candidates, onVote }: GameProps) {
+export default function DartsGame({ candidates, onVote, onChoose }: GameProps) {
   const [t, setT] = useState(0);
   const [thrown, setThrown] = useState(false);
   const [dartPos, setDartPos] = useState<{ x: number; y: number } | null>(null);
   const [winner, setWinner] = useState<Candidate | null>(null);
+  const [missed, setMissed] = useState(false);
   const rafRef = useRef<number | null>(null);
   const tRef = useRef(0);
   const boardRef = useRef<HTMLDivElement>(null);
@@ -49,32 +51,38 @@ export default function DartsGame({ candidates, onVote }: GameProps) {
     const clientY = "touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
     const dx = clientX - rect.left;
     const dy = clientY - rect.top;
-    // Add a small random jitter
-    const jx = dx + (Math.random() - 0.5) * 20;
-    const jy = dy + (Math.random() - 0.5) * 20;
-    setDartPos({ x: jx, y: jy });
+    setDartPos({ x: dx, y: dy });
 
-    // Find nearest candidate at current time
+    // Find candidates within hit radius at moment of throw
     const positions = candidates.map((_, i) => candidatePos(tRef.current, i));
-    let minDist = Infinity;
-    let nearest = 0;
-    positions.forEach((pos, i) => {
-      const d = Math.hypot(jx - pos.x, jy - pos.y);
-      if (d < minDist) { minDist = d; nearest = i; }
-    });
+    const hits = positions
+      .map((pos, i) => ({ i, dist: Math.hypot(dx - pos.x, dy - pos.y) }))
+      .filter(h => h.dist <= HIT_RADIUS)
+      .sort((a, b) => a.dist - b.dist);
 
-    setWinner(candidates[nearest]);
-    setTimeout(() => onVote(candidates[nearest]), 2200);
-  }, [thrown, candidates, onVote]);
+    let winnerCandidate: Candidate;
+    if (hits.length > 0) {
+      winnerCandidate = candidates[hits[0].i];
+      onChoose?.(winnerCandidate);
+    } else {
+      // Missed — random winner
+      setMissed(true);
+      winnerCandidate = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    setWinner(winnerCandidate);
+    setTimeout(() => onVote(winnerCandidate), 2200);
+  }, [thrown, candidates, onVote, onChoose]);
 
   const positions = candidates.map((_, i) => candidatePos(t, i));
   const ringColors = ["border-indigo-400", "border-pink-400", "border-emerald-400"];
+  const glowColors = ["shadow-indigo-400/60", "shadow-pink-400/60", "shadow-emerald-400/60"];
 
   return (
     <div className="flex flex-col items-center gap-6">
       <p className="text-lg font-bold text-indigo-800">🎯 Les Fléchettes</p>
       <p className="text-gray-500 text-sm text-center">
-        {thrown ? "La fléchette est lancée !" : "Cliquez pour lancer votre fléchette !"}
+        {thrown ? (missed ? "Dans le mur… le destin choisit !" : "Touché !") : "Cliquez sur une cible pour lancer !"}
       </p>
 
       <div ref={boardRef}
@@ -93,10 +101,10 @@ export default function DartsGame({ candidates, onVote }: GameProps) {
         {/* Moving candidates */}
         {candidates.map((c, i) => (
           <motion.div key={c.id}
-            animate={{ left: positions[i].x - 20, top: positions[i].y - 20 }}
+            animate={{ left: positions[i].x - 22, top: positions[i].y - 22 }}
             transition={{ duration: 0 }}
-            className={`absolute w-10 h-10 rounded-full border-2 ${ringColors[i]} overflow-hidden shadow-lg`}
-            style={{ left: positions[i].x - 20, top: positions[i].y - 20 }}
+            className={`absolute w-11 h-11 rounded-full border-2 ${ringColors[i]} shadow-lg ${glowColors[i]} overflow-hidden`}
+            style={{ left: positions[i].x - 22, top: positions[i].y - 22 }}
           >
             <Avatar candidate={c} size="sm" />
           </motion.div>
@@ -107,8 +115,9 @@ export default function DartsGame({ candidates, onVote }: GameProps) {
           {dartPos && (
             <motion.div key="dart"
               initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="absolute text-xl pointer-events-none z-20"
+              animate={{ scale: 1.4, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="absolute pointer-events-none z-20 text-xl"
               style={{ left: dartPos.x - 10, top: dartPos.y - 10 }}
             >🎯</motion.div>
           )}
@@ -118,7 +127,7 @@ export default function DartsGame({ candidates, onVote }: GameProps) {
       {winner && (
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           className="text-gray-700 font-medium text-center">
-          Touché ! Vote pour <strong>{winner.firstName} {winner.lastName}</strong>…
+          Vote pour <strong>{winner.firstName} {winner.lastName}</strong>…
         </motion.p>
       )}
     </div>

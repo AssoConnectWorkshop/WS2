@@ -28,8 +28,8 @@ function buildPegs() {
 
 const PEGS = buildPegs();
 
-function computePath(): { waypoints: Point[]; bucket: number } {
-  let x = W / 2;
+function computePath(startX: number): { waypoints: Point[]; bucket: number } {
+  let x = Math.max(20, Math.min(W - 20, startX));
   const waypoints: Point[] = [{ x, y: 20 }];
   for (let row = 0; row < PEG_ROWS; row++) {
     const y = 70 + row * 48;
@@ -48,10 +48,12 @@ export default function PlinkoGame({ candidates, onVote }: GameProps) {
   const [dropped, setDropped] = useState(false);
   const [winBucket, setWinBucket] = useState<number | null>(null);
 
-  async function drop() {
+  async function drop(e: React.MouseEvent<HTMLDivElement>) {
     if (dropped) return;
     setDropped(true);
-    const { waypoints, bucket } = computePath();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const { waypoints, bucket } = computePath(clickX);
     setBallPos(waypoints[0]);
     for (let i = 1; i < waypoints.length; i++) {
       await new Promise<void>((r) => setTimeout(r, 160));
@@ -67,44 +69,39 @@ export default function PlinkoGame({ candidates, onVote }: GameProps) {
   return (
     <div className="flex flex-col items-center gap-6">
       <p className="text-lg font-bold text-indigo-800">🎯 Le Plinko</p>
-      <p className="text-gray-500 text-sm text-center">Lâchez la bille pour voter !</p>
+      <p className="text-gray-500 text-sm text-center">Cliquez là où vous voulez lâcher la bille !</p>
 
-      <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-xl"
+      <div className="relative bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl overflow-hidden shadow-xl cursor-crosshair"
         style={{ width: W, height: H }}
         onClick={drop}
       >
-        {/* Drop zone hint */}
         {!dropped && (
-          <div className="absolute inset-x-0 top-0 flex justify-center pt-2">
+          <div className="absolute inset-x-0 top-0 flex justify-center pt-2 pointer-events-none">
             <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1.2 }}
               className="text-white text-xs font-medium bg-white/10 px-3 py-1 rounded-full">
-              Cliquez pour lâcher la bille
+              Cliquez n&apos;importe où en haut
             </motion.div>
           </div>
         )}
 
-        {/* Pegs */}
         <svg className="absolute inset-0" width={W} height={H}>
           {PEGS.map((p, i) => (
             <circle key={i} cx={p.x} cy={p.y} r={5} fill="#94a3b8" />
           ))}
-          {/* Bucket dividers */}
           {[1, 2].map((i) => (
             <line key={i} x1={BUCKET_W * i} y1={H - 80} x2={BUCKET_W * i} y2={H} stroke="#475569" strokeWidth={2} />
           ))}
         </svg>
 
-        {/* Ball */}
         {ballPos && (
           <motion.div
             animate={{ left: ballPos.x - 10, top: ballPos.y - 10 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute w-5 h-5 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50"
+            className="absolute w-5 h-5 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50 z-10"
             style={{ left: ballPos.x - 10, top: ballPos.y - 10 }}
           />
         )}
 
-        {/* Buckets */}
         <div className="absolute bottom-0 inset-x-0 flex h-16">
           {candidates.map((c, i) => (
             <div key={c.id}
