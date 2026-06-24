@@ -125,7 +125,7 @@ export default function ConfigurePanel({
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Filtrer par nom…"
-            className="flex-1 max-w-xs px-3 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="flex-1 max-w-xs px-3 py-1.5 text-sm text-gray-800 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
         <ul className="flex flex-col gap-2">
