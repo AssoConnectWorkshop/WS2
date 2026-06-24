@@ -8,7 +8,7 @@ import Avatar from "./Avatar";
 const SIZE = 300;
 const CENTER = SIZE / 2;
 const ORBIT_R = [90, 90, 90];
-const SPEEDS = [0.4, -0.6, 0.5];
+const SPEEDS = [1.8, -2.4, 2.1];
 const PHASES = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
 
 function candidatePos(t: number, idx: number) {
@@ -64,7 +64,7 @@ export default function DartsGame({ candidates, onVote }: GameProps) {
     });
 
     setWinner(candidates[nearest]);
-    setTimeout(() => onVote(candidates[nearest]), 1200);
+    setTimeout(() => onVote(candidates[nearest]), 2200);
   }, [thrown, candidates, onVote]);
 
   const positions = candidates.map((_, i) => candidatePos(t, i));

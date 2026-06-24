@@ -8,4 +8,5 @@ export type Candidate = {
 export type GameProps = {
   candidates: Candidate[];
   onVote: (candidate: Candidate) => void;
+  onChoose?: (candidate: Candidate) => void;
 };

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { GameProps } from "./types";
+import type { GameProps, Candidate } from "./types";
 import Avatar from "./Avatar";
 
 type Step = "select" | "shuffle" | "pick" | "reveal";
@@ -24,21 +24,28 @@ function generateMoves(count: number): Array<[number, number]> {
   });
 }
 
-function Cup({ lifted, children }: { lifted: boolean; children?: React.ReactNode }) {
+function Cup({ lifted, candidate }: { lifted: boolean; candidate: Candidate }) {
   return (
-    <div className="relative flex flex-col items-center" style={{ width: 88, height: 130 }}>
+    <div className="relative flex flex-col items-center" style={{ width: 88, height: 140 }}>
+      {/* Avatar hidden inside cup at its center — revealed when cup lifts */}
+      <div className="absolute flex flex-col items-center gap-1" style={{ top: 32, left: "50%", transform: "translateX(-50%)" }}>
+        <Avatar candidate={candidate} size="sm" />
+        <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">{candidate.firstName}</span>
+      </div>
+
+      {/* Cup overlay */}
       <AnimatePresence>
         {!lifted && (
           <motion.div
             key="cup"
             initial={{ y: 0, opacity: 1 }}
-            exit={{ y: -80, opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            exit={{ y: -90, opacity: 0 }}
+            transition={{ duration: 0.55 }}
             className="absolute top-0 z-10 flex flex-col items-center"
             style={{ width: 88 }}
           >
-            <svg width="88" height="104" viewBox="0 0 88 104" fill="none">
-              <path d="M12 10 L76 10 L66 96 L22 96 Z" fill="#e87c2b" stroke="#c4601a" strokeWidth="2" />
+            <svg width="88" height="110" viewBox="0 0 88 110" fill="none">
+              <path d="M12 10 L76 10 L66 100 L22 100 Z" fill="#e87c2b" stroke="#c4601a" strokeWidth="2" />
               <rect x="6" y="4" width="76" height="13" rx="6.5" fill="#f59e42" stroke="#c4601a" strokeWidth="2" />
               <path d="M18 23 Q26 17 34 23" stroke="#fcd08a" strokeWidth="2.5" strokeLinecap="round" fill="none" />
             </svg>
@@ -46,12 +53,11 @@ function Cup({ lifted, children }: { lifted: boolean; children?: React.ReactNode
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="absolute bottom-0 flex flex-col items-center">{children}</div>
     </div>
   );
 }
 
-export default function BonneteauGame({ candidates, onVote }: GameProps) {
+export default function BonneteauGame({ candidates, onVote, onChoose }: GameProps) {
   const [step, setStep] = useState<Step>("select");
   const [positions, setPositions] = useState([0, 1, 2]);
   const [animX, setAnimX] = useState([slotX[0], slotX[1], slotX[2]]);
@@ -75,11 +81,16 @@ export default function BonneteauGame({ candidates, onVote }: GameProps) {
     });
   }, [step]);
 
+  function handleSelect(candidate: Candidate) {
+    onChoose?.(candidate);
+    setStep("shuffle");
+  }
+
   function handlePickSlot(slotIndex: number) {
     if (step !== "pick") return;
     setLiftedSlot(slotIndex);
     setStep("reveal");
-    setTimeout(() => onVote(candidates[positions[slotIndex]]), 900);
+    setTimeout(() => onVote(candidates[positions[slotIndex]]), 2000);
   }
 
   return (
@@ -92,7 +103,7 @@ export default function BonneteauGame({ candidates, onVote }: GameProps) {
             <div className="flex gap-5 flex-wrap justify-center">
               {candidates.map((c) => (
                 <motion.button key={c.id} whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.94 }}
-                  onClick={() => setStep("shuffle")}
+                  onClick={() => handleSelect(c)}
                   className="flex flex-col items-center gap-2 bg-white rounded-2xl p-5 shadow border-2 border-transparent hover:border-indigo-400 transition-colors">
                   <Avatar candidate={c} />
                   <span className="text-sm font-medium">{c.firstName}</span>
@@ -106,14 +117,14 @@ export default function BonneteauGame({ candidates, onVote }: GameProps) {
             <p className="text-gray-500 text-center text-sm">
               {step === "shuffle" ? "Suivez les gobelets !" : "Cliquez sur un gobelet !"}
             </p>
-            <div className="relative flex items-end justify-center" style={{ width: 360, height: 150 }}>
+            <div className="relative flex items-end justify-center" style={{ width: 380, height: 160 }}>
               {[0, 1, 2].map((slotIndex) => (
                 <motion.div key={slotIndex} animate={{ x: animX[slotIndex] }} transition={{ duration: 0.38, ease: "easeInOut" }}
                   style={{ position: "absolute", left: "50%", marginLeft: -44 }}
                   onClick={() => handlePickSlot(slotIndex)}
                   className={step === "pick" ? "cursor-pointer" : "cursor-default"}>
                   <motion.div whileHover={step === "pick" ? { y: -8 } : {}}>
-                    <Cup lifted={false}><Avatar candidate={candidates[positions[slotIndex]]} size="sm" /></Cup>
+                    <Cup lifted={false} candidate={candidates[positions[slotIndex]]} />
                   </motion.div>
                 </motion.div>
               ))}
@@ -122,12 +133,11 @@ export default function BonneteauGame({ candidates, onVote }: GameProps) {
         )}
         {step === "reveal" && (
           <motion.div key="reveal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-6">
-            <div className="relative flex items-end justify-center" style={{ width: 360, height: 150 }}>
+            <p className="text-gray-500 text-center text-sm">Révélation…</p>
+            <div className="relative flex items-end justify-center" style={{ width: 380, height: 160 }}>
               {[0, 1, 2].map((slotIndex) => (
                 <div key={slotIndex} style={{ position: "absolute", left: "50%", marginLeft: -44, transform: `translateX(${animX[slotIndex]}px)` }}>
-                  <Cup lifted={slotIndex === liftedSlot}>
-                    <Avatar candidate={candidates[positions[slotIndex]]} size="sm" />
-                  </Cup>
+                  <Cup lifted={slotIndex === liftedSlot} candidate={candidates[positions[slotIndex]]} />
                 </div>
               ))}
             </div>
