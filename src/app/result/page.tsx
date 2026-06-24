@@ -54,8 +54,9 @@ export default async function ResultPage() {
       <h1 className="text-3xl font-bold text-indigo-800">Résultats du vote</h1>
       <p className="text-gray-500 text-sm">{totalVotes} vote{totalVotes !== 1 ? "s" : ""} exprimé{totalVotes !== 1 ? "s" : ""}</p>
       <ResultBars results={results} totalVotes={totalVotes} />
-      <Link href="/vote" className="mt-4 text-sm text-indigo-500 hover:underline">
-        ← Retour au vote
+      <Link href="/vote"
+        className="mt-4 px-6 py-3 bg-indigo-600 text-white rounded-full font-semibold shadow hover:bg-indigo-700 transition-colors">
+        Voter à nouveau →
       </Link>
     </main>
   );
