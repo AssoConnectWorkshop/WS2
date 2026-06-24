@@ -37,9 +37,15 @@ export default function ConfigurePanel({
 }) {
   const [pending, startTransition] = useTransition();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
 
   const selectedIds = new Set(selected.map((c) => c.id));
   const available = contacts.filter((c) => !selectedIds.has(c.id));
+  const filtered = filter.trim()
+    ? available.filter((c) =>
+        `${c.firstname} ${c.lastname}`.toLowerCase().includes(filter.toLowerCase())
+      )
+    : available;
 
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -110,11 +116,20 @@ export default function ConfigurePanel({
 
       {/* All members */}
       <section>
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">
-          Tous les membres ({contacts.length})
-        </h2>
+        <div className="flex items-center justify-between mb-3 gap-4">
+          <h2 className="text-lg font-semibold text-gray-700 flex-shrink-0">
+            Tous les membres ({contacts.length})
+          </h2>
+          <input
+            type="text"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filtrer par nom…"
+            className="flex-1 max-w-xs px-3 py-1.5 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          />
+        </div>
         <ul className="flex flex-col gap-2">
-          {available.map((c) => (
+          {filtered.map((c) => (
             <li
               key={c.id}
               className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 hover:border-indigo-300 transition-colors"
@@ -133,6 +148,9 @@ export default function ConfigurePanel({
               </button>
             </li>
           ))}
+          {filtered.length === 0 && available.length > 0 && (
+            <p className="text-sm text-gray-400 italic">Aucun membre ne correspond à &quot;{filter}&quot;.</p>
+          )}
           {available.length === 0 && (
             <p className="text-sm text-gray-400 italic">Tous les membres sont déjà sélectionnés.</p>
           )}
