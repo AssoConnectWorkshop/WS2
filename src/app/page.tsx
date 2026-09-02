@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getOrganization } from "@/lib/assoconnect";
 import { createClient } from "@/lib/supabase/server";
 
@@ -44,7 +45,13 @@ export default async function Home() {
 
       <div className="flex flex-col items-center gap-4">
         <Image src="/mascot.png" alt="Mascot" width={160} height={160} priority />
-        <h1 className="text-4xl font-bold">Start playing</h1>
+        <h1 className="text-4xl font-bold text-center">👶 Trouvez le prénom de bébé</h1>
+        <Link
+          href="/baby-names"
+          className="border rounded-full px-6 py-3 text-sm font-medium hover:bg-gray-50"
+        >
+          Chercher un prénom
+        </Link>
       </div>
 
       <div className="flex flex-col gap-4 w-full max-w-md">

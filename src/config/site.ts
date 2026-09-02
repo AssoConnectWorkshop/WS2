@@ -1,4 +1,4 @@
 export const siteConfig = {
   name: "WS2",
-  description: "Next.js + Supabase + AssoConnect API.",
+  description: "Trouvez le prénom idéal pour votre bébé.",
 };
